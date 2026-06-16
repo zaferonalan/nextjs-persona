@@ -13,64 +13,112 @@ datasource db {
 }
 
 model User {
-  id            String    @id
-  name          String
-  email         String
-  emailVerified Boolean   @default(false)
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  sessions      Session[]
-  accounts      Account[]
+  id        String   @id @default(cuid())
+  email     String   @unique
+  username  String   @unique
+  clerkId   String   @unique
+  name      String?
+  bio       String?
+  image     String?
+  location  String?
+  website   String?
+  createdAt DateTime @default(now()) // member since 2020
+  updatedAt DateTime @updatedAt
 
-  @@unique([email])
-  @@map("user")
+  // Relations: 
+  posts    Post[] // One-to-many    One User → Many Posts
+  comments Comment[] // One-to-many     One User → Many Comments
+  likes    Like[] // One-to-many      One User → Many Likes
+
+  //  Many-to-Many (Çoka → Çok)
+  followers Follows[] @relation("following") // users who follow this user
+  following Follows[] @relation("follower") // users this user follows
+
+  notifications        Notification[] @relation("userNotifications") // notifications received by a user
+  notificationsCreated Notification[] @relation("notificationCreator") // notifications triggered by a user
 }
 
-model Session {
-  id        String   @id
-  expiresAt DateTime
-  token     String
+model Post {
+  id        String   @id @default(cuid())
+  authorId  String
+  content   String?
+  image     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  ipAddress String?
-  userAgent String?
+
+  // Relations
+  // Many Posts → One User
+  author        User           @relation(fields: [authorId], references: [id], onDelete: Cascade) // cascade delete means delete all posts if author is deleted
+  comments      Comment[]
+  likes         Like[]
+  notifications Notification[]
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  authorId  String
+  postId    String
+  createdAt DateTime @default(now())
+
+  // Relations
+  author        User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  // Many-to-One (Çok → Bire)
+  post          Post           @relation(fields: [postId], references: [id], onDelete: Cascade)
+  notifications Notification[]
+
+  @@index([authorId, postId]) // composite index for faster queries
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  postId    String
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
 
-  @@unique([token])
-  @@index([userId])
-  @@map("session")
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId]) // this prevents same user liking post twice
+  @@index([userId, postId]) // composite index for faster queries
 }
 
-model Account {
-  id                    String    @id
-  accountId             String
-  providerId            String
-  userId                String
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  accessToken           String?
-  refreshToken          String?
-  idToken               String?
-  accessTokenExpiresAt  DateTime?
-  refreshTokenExpiresAt DateTime?
-  scope                 String?
-  password              String?
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+model Follows {
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
 
-  @@index([userId])
-  @@map("account")
+  // Relations
+  //  Many-to-Many (Çoka → Çok)
+  follower  User @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, followingId]) // composite primary key prevents duplicate follows
+  @@index([followerId, followingId]) // composite index for faster queries
 }
 
-model Verification {
-  id         String   @id
-  identifier String
-  value      String
-  expiresAt  DateTime
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  creatorId String
+  type      NotificationType
+  read      Boolean          @default(false)
+  postId    String?
+  commentId String?
+  createdAt DateTime         @default(now())
 
-  @@index([identifier])
-  @@map("verification")
+  // Relations
+  user    User     @relation("userNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  creator User     @relation("notificationCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  post    Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  comment Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+enum NotificationType {
+  LIKE
+  COMMENT
+  FOLLOW
 }

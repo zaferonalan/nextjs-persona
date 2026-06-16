@@ -1,27 +1,30 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 
-export default function Home() {
+import { getPosts } from "@/actions/post.actions";
+import { getDbUserId } from "@/actions/user.actions";
+import CreatePost from "@/components/CreatePost";
+import PostCard from "@/components/PostCard";
+import WhoToFollow from "@/components/WhoToFollow";
+import { currentUser } from "@clerk/nextjs/server";
+
+export default async function Home() {
+  const user = await currentUser();
+  const posts = await getPosts();
+  const dbUserId = await getDbUserId();
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="w-full max-w-md space-y-6 p-6">
-        <div className="space-y-2 text-center">
-          <h1 className="text-3xl font-bold">Better Auth Tutorial</h1>
-          <p className="text-muted-foreground">
-            Learn how to implement forgot password functionality
-          </p>
+    <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
+      <div className="lg:col-span-6">
+        {user ? <CreatePost /> : null}
+
+        <div className="space-y-6">
+          {posts.map((post) => (
+            <PostCard key={post.id} post={post} dbUserId={dbUserId} />
+          ))}
         </div>
-        <div className="flex flex-col gap-3">
-          <Button asChild>
-            <Link href="/login">Login</Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/signup">Sign Up</Link>
-          </Button>
-          <Button asChild variant="secondary">
-            <Link href="/dashboard">Dashboard (Protected)</Link>
-          </Button>
-        </div>
+      </div>
+
+      <div className="hidden lg:block lg:col-span-4 sticky top-20">
+        <WhoToFollow />
       </div>
     </div>
   );
