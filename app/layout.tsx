@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Navbar from "@/components/Navbar";
-import { Sidebar } from "lucide-react";
 import { ClerkProvider } from "@clerk/nextjs";
+import Sidebar from "@/components/Sidebar";
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
