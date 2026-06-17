@@ -31,37 +31,38 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    
       <html
         lang="en"
         suppressHydrationWarning
         className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans", inter.variable)}
       >
         <body className="min-h-full flex flex-col">
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <div className="min-h-screen">
-              <Navbar />
-              <main className="py-8">
-                {/* container to center the content */}
-                <div className="max-w-7xl mx-auto px-4">
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    <div className="hidden lg:block lg:col-span-3">
-                      <Sidebar />
+          <ClerkProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              <div className="min-h-screen">
+                <Navbar />
+                <main className="py-8">
+                  {/* container to center the content */}
+                  <div className="max-w-7xl mx-auto px-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                      <div className="hidden lg:block lg:col-span-3">
+                        <Sidebar />
+                      </div>
+                      <div className="lg:col-span-9">{children}</div>
                     </div>
-                    <div className="lg:col-span-9">{children}</div>
                   </div>
-                </div>
-              </main>
-            </div>
-            <Toaster />
-          </ThemeProvider>
+                </main>
+              </div>
+              <Toaster />
+            </ThemeProvider>
+          </ClerkProvider>
         </body>
       </html>
-    </ClerkProvider>
   );
 }
