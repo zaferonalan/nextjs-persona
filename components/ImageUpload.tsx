@@ -28,7 +28,8 @@ function ImageUpload({ endpoint, onChange, value }: ImageUploadProps) {
     <UploadDropzone
       endpoint={endpoint}
       onClientUploadComplete={(res) => {
-        onChange(res?.[0].url);
+        const url = res?.[0]?.ufsUrl;
+        if (url) onChange(url);
       }}
       onUploadError={(error: Error) => {
         console.log(error);
